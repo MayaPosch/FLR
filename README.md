@@ -20,6 +20,22 @@ The following Make targets are available from the top folder:
 
 After building, the binaries can be found in a newly created `bin` folder.
 
+## Running ##
+
+The FLR server looks for a `config.ini` file in the same folder. This INI file has the following structure:
+
+    [NymphRPC]
+	timeout = 5000
+	port = 4004
+
+The timeout is for client connections. The port is where the server listens on. Currently the server listens on all network interfaces. By default the FLR server listens on port 4004.
+
+The FLR client allows one to specify the host and port to connect to via the following commandline options:
+
+	$ ./flrclient -s <server name/IP> -p <port>
+
+By default the FLR client tries to connect to `localhost`, port 4004.
+
 ## Current status ##
 
 Keeping in mind that FLR is still early Alpha-level quality, it offers the following features:
