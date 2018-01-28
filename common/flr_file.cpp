@@ -259,6 +259,7 @@ bool FlrFile::readIndex() {
 	index += 7;
 	if (signature != "FLRFILE") {
 		// Error reading file.
+		cerr << "Failed to find FLRFILE signature." << endl;
 		return false;
 	}
 	
@@ -266,12 +267,14 @@ bool FlrFile::readIndex() {
 	index += 8;
 	if ((index + size) != bin.length()) {
 		// Error reading file.
+		cerr << "Invalid size." << endl;
 		return false;
 	}
 	
 	UInt8 version = *((UInt8*) &bin[index++]);
 	if (version != 0) {
 		// False version.
+		cerr << "Invalid FLR version" << endl;
 		return false;
 	}
 	
@@ -279,6 +282,7 @@ bool FlrFile::readIndex() {
 	index += 5;
 	if (signature != "INDEX") {
 		// Error reading file.
+		cerr << "Failed to find INDEX signature." << endl;
 		return false;
 	}
 	
@@ -286,6 +290,7 @@ bool FlrFile::readIndex() {
 	index += 4;
 	if ((offsetCount * 8) + index != bin.length()) {
 		// Error parsing: incorrect length.
+		cerr << "Invalid length." << endl;
 		return false;
 	}
 	
@@ -307,7 +312,7 @@ bool FlrFile::writeIndex() {
 	cout << "Writing index file...\n";
 	// Serialise the data.
 	string out;
-	string header = "FILRFILE";
+	string header = "FLRFILE";
 	UInt8 revision = 0;
 	UInt64 length = 0;
 	
@@ -385,9 +390,8 @@ bool FlrFile::copyFileDataToDelta() {
 	
 	cout << "Finished seeking to footer.\n";
 	
-	char signature[6];
-	DATA->read(signature, 6);
-	if (strcmp(signature, "DELTAS") != 0) {
+	string signature = readBytes(*DATA, 6);
+	if (signature != "DELTAS") {
 		// Signature fail. Abort.
 		cerr << "Failed to find DELTAS signature. Found: " << signature << endl;
 		return false;
@@ -468,6 +472,7 @@ bool FlrFile::readDelta(UInt32 id, FlrDelta &delta) {
 	DATA->open(path + ".data", ios_base::in | ios_base::binary);
 	if (readBytes(*DATA, 6) != "DELTAS") {
 		// Error parsing.
+		cerr << "Failed to find DELTAS signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -478,6 +483,7 @@ bool FlrFile::readDelta(UInt32 id, FlrDelta &delta) {
 	FlrFileMeta meta;
 	if (readBytes(*DATA, 5) != "DELTA") {
 		// Error parsing.
+		cerr << "Failed to find DELTA signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -491,6 +497,7 @@ bool FlrFile::readDelta(UInt32 id, FlrDelta &delta) {
 	
 	if (readBytes(*DATA, 4) != "META") {
 		// Error parsing.
+		cerr << "Failed to find META signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -503,6 +510,7 @@ bool FlrFile::readDelta(UInt32 id, FlrDelta &delta) {
 	
 	if (readBytes(*DATA, 4) != "DATA") {
 		// Error parsing.
+		cerr << "Failed to find DATA signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -569,6 +577,7 @@ bool FlrFile::readDeltaMeta(UInt32 id, FlrFileMeta &meta) {
 	
 	if (readBytes(*DATA, 6) != "DELTAS") {
 		// Error parsing.
+		cerr << "Failed to find DELTAS signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -578,6 +587,7 @@ bool FlrFile::readDeltaMeta(UInt32 id, FlrFileMeta &meta) {
 	// Read in the delta.
 	if (readBytes(*DATA, 5) != "DELTA") {
 		// Error parsing.
+		cerr << "Failed to find DELTA signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -585,12 +595,14 @@ bool FlrFile::readDeltaMeta(UInt32 id, FlrFileMeta &meta) {
 	meta.delta = *((UInt32*) readBytes(*DATA, 4).data());
 	if (meta.delta != id) {
 		// Error parsing.
+		cerr << "Delta ID and provided ID did not match." << endl;
 		DATA->close();
 		return false;
 	}
 	
 	if (readBytes(*DATA, 4) != "META") {
 		// Error parsing.
+		cerr << "Failed to find META signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -646,6 +658,7 @@ bool FlrFile::readDeltaMetas() {
 	if (!DATA->good()) { DATA-> close(); return false; }
 	if (readBytes(*DATA, 6) != "DELTAS") {
 		// Error parsing.
+		cerr << "Failed to find DELTAS signature." << endl;
 		DATA->close();
 		return false;
 	}
@@ -666,6 +679,7 @@ bool FlrFile::readDeltaMetas() {
 		// Read in the delta.
 		if (readBytes(*DATA, 5) != "DELTA") {
 			// Error parsing.
+		cerr << "Failed to find DELTA signature." << endl;
 			DATA->close();
 			return false;
 		}
@@ -673,12 +687,14 @@ bool FlrFile::readDeltaMetas() {
 		UInt32 delta = *((UInt32*) readBytes(*DATA, 4).data());
 		if (delta != i) {
 			// Error parsing.
+		cerr << "Delta ID doesn't match sequence ID." << endl;
 			DATA->close();
 			return false;
 		}
 		
 		if (readBytes(*DATA, 4) != "META") {
 			// Error parsing.
+		cerr << "Failed to find META signature." << endl;
 			DATA->close();
 			return false;
 		}
@@ -743,6 +759,7 @@ bool FlrFile::readDeltaNames() {
 	string signature = bin.substr(index, 7);
 	index += 7;
 	if (signature != "FLRFILE") {
+		cerr << "Failed to find FLRFILE signature." << endl;
 		// Error reading file.
 		return false;
 	}
@@ -751,6 +768,7 @@ bool FlrFile::readDeltaNames() {
 	index += 8;
 	if ((index + size) != bin.length()) {
 		// Error reading file.
+		cerr << "Invalid size." << endl;
 		return false;
 	}
 	
@@ -764,6 +782,7 @@ bool FlrFile::readDeltaNames() {
 	index += 6;
 	if (signature != "DNAMES") {
 		// Error reading file.
+		cerr << "Failed to find DNAMES signature." << endl;
 		return false;
 	}
 	
@@ -778,6 +797,7 @@ bool FlrFile::readDeltaNames() {
 		signature = bin.substr(index, 5);
 		if (signature != "DNAME") {
 			// Error while parsing
+			cerr << "Failed to find DNAME signature." << endl;
 			return false;
 		}
 		
